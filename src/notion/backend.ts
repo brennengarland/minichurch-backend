@@ -1,6 +1,6 @@
 import { Client } from "@notionhq/client";
 import dotenv from "dotenv";
-import Database from "./database";
+import { Database } from "./database";
 
 const MEALS_URL = "https://www.notion.so/mini-church/84e2850b0f48437d945b4993cb824af4?v=ef05198e89af4e949bccc722740d06b5";
 const MEALS_DATABASE_ID = "84e2850b0f48437d945b4993cb824af4";

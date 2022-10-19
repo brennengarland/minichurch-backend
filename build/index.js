@@ -1,6 +1,6 @@
 import { ApolloServer } from '@apollo/server';
-import { DateTypeDefinition } from 'graphql-scalars'
-import { MealsDatabase, PeopleDatabase, MealInput } from './notion/backend';
+import { DateTypeDefinition } from 'graphql-scalars';
+import { MealsDatabase, PeopleDatabase } from './notion/backend';
 import { isFullPage } from '@notionhq/client';
 import express from 'express';
 import http from 'http';
@@ -8,8 +8,6 @@ import { ApolloServerPluginDrainHttpServer } from '@apollo/server/plugin/drainHt
 import cors from 'cors';
 import bodyParser from 'body-parser';
 import { expressMiddleware } from '@apollo/server/express4';
-
-
 // A schema is a collection of type definitions (hence "typeDefs")
 // that together define the "shape" of queries that are executed against
 // your data.
@@ -61,71 +59,55 @@ const customTypeDefs = `#graphql
     createMeal(meal: MealInput): Boolean
   }
 `;
-
 const typeDefs = [
     DateTypeDefinition,
     customTypeDefs
-]
-
+];
 const resolvers = {
     Query: {
         people: async () => {
-          const data = await PeopleDatabase.query();
-          return data.results.map(page => {
-            if(isFullPage(page)) {
-              return {
-                _id: page.id,
-                // @ts-ignore
-                name: page.properties.Name.title[0].plain_text,
-                // @ts-ignore
-                email: page.properties.Email.email,
-                // @ts-ignore
-                phone: page.properties.Phone.phone_number,
-              }
-            }
-          })
+            const data = await PeopleDatabase.query();
+            return data.results.map(page => {
+                if (isFullPage(page)) {
+                    return {
+                        _id: page.id,
+                        // @ts-ignore
+                        name: page.properties.Name.title[0].plain_text,
+                        // @ts-ignore
+                        email: page.properties.Email.email,
+                        // @ts-ignore
+                        phone: page.properties.Phone.phone_number,
+                    };
+                }
+            });
         },
-      },
+    },
     Mutation: {
-      createMeal: async (_: any,{ meal }: {meal: MealInput}) => {
-        console.log(meal)
-        const newMeal = await MealsDatabase.create(meal);
-        return isFullPage(newMeal)
-      }
+        createMeal: async (_, { meal }) => {
+            console.log(meal);
+            const newMeal = await MealsDatabase.create(meal);
+            return isFullPage(newMeal);
+        }
     }
-}
-
-interface MyContext {
-  token?: String;
-}
-
+};
 const app = express();
 const httpServer = http.createServer(app);
-
-
 // The ApolloServer constructor requires two parameters: your schema
 // definition and your set of resolvers.
 async function startApolloServer() {
-  const server = new ApolloServer<MyContext>({
-      typeDefs,
-      resolvers,
-      plugins: [ApolloServerPluginDrainHttpServer({ httpServer })],
+    const server = new ApolloServer({
+        typeDefs,
+        resolvers,
+        plugins: [ApolloServerPluginDrainHttpServer({ httpServer })],
     });
-
-  await server.start();
-
-  app.use('/',
-    cors<cors.CorsRequest>(),
-    bodyParser.json(),
+    await server.start();
+    app.use('/', cors(), bodyParser.json(), 
     // expressMiddleware accepts the same arguments:
     // an Apollo Server instance and optional configuration options
     expressMiddleware(server, {
-      context: async ({ req }) => ({ token: req.headers.token }),
-    }),
-    );
-
-  await new Promise<void>(resolve => httpServer.listen({ port: process.env.PORT || 4000 }, resolve));
-  console.log(`🚀 Server ready at http://localhost:4000/`);
+        context: async ({ req }) => ({ token: req.headers.token }),
+    }));
+    await new Promise(resolve => httpServer.listen({ port: process.env.PORT || 4000 }, resolve));
+    console.log(`🚀 Server ready at http://localhost:4000/`);
 }
-
 startApolloServer();

@@ -1,24 +1,19 @@
-import { notion } from "./backend"
-import { CreatePageParameters } from "@notionhq/client/build/src/api-endpoints";
-
-export class Database<T, InputType> {
-    id: string;
-    notion = notion;
-    constructor(id: string) {
+import { notion } from "./backend";
+export class Database {
+    constructor(id) {
+        this.notion = notion;
         this.id = id;
     }
-
-    query(filter?: any) {
+    query(filter) {
         const query = notion.databases.query({
             database_id: this.id,
             filter: filter
         });
-        console.log(query)
+        console.log(query);
         return query;
     }
-
-    create(page: InputType) {
-        console.log(page)
+    create(page) {
+        console.log(page);
         return notion.pages.create({
             parent: {
                 type: "database_id",
@@ -32,7 +27,7 @@ export class Database<T, InputType> {
                             "type": "text",
                             "text": {
                                 // @ts-ignore
-                              "content": page.name
+                                "content": page.name
                             }
                         }
                     ]
@@ -56,6 +51,6 @@ export class Database<T, InputType> {
                     relation: page.people
                 }
             }
-        })
+        });
     }
 }
