@@ -3,6 +3,13 @@ import { startStandaloneServer } from '@apollo/server/standalone';
 import { DateTypeDefinition } from 'graphql-scalars'
 import { MealsDatabase, page, PeopleDatabase, MealInput } from './notion/backend';
 import { isFullPage } from '@notionhq/client';
+import express from 'express';
+import http from 'http';
+import { ApolloServerPluginDrainHttpServer } from '@apollo/server/plugin/drainHttpServer';
+import cors from 'cors';
+import bodyParser from 'body-parser';
+import { expressMiddleware } from '@apollo/server/express4';
+
 
 // A schema is a collection of type definitions (hence "typeDefs")
 // that together define the "shape" of queries that are executed against
@@ -89,19 +96,33 @@ const resolvers = {
     }
 }
 
+interface MyContext {
+  token?: String;
+}
+
+const app = express();
+const httpServer = http.createServer(app);
+
+
 // The ApolloServer constructor requires two parameters: your schema
 // definition and your set of resolvers.
-const server = new ApolloServer({
+const server = new ApolloServer<MyContext>({
     typeDefs,
     resolvers,
+    plugins: [ApolloServerPluginDrainHttpServer({ httpServer })],
   });
-  
-  // Passing an ApolloServer instance to the `startStandaloneServer` function:
-  //  1. creates an Express app
-  //  2. installs your ApolloServer instance as middleware
-  //  3. prepares your app to handle incoming requests
-  const { url } = await startStandaloneServer(server, {
-    listen: { port: 4000 },
-  });
-  
-  console.log(`🚀  Server ready at: ${url}`);
+
+await server.start();
+
+app.use('/',
+  cors<cors.CorsRequest>(),
+  bodyParser.json(),
+  // expressMiddleware accepts the same arguments:
+  // an Apollo Server instance and optional configuration options
+  expressMiddleware(server, {
+    context: async ({ req }) => ({ token: req.headers.token }),
+  }),
+  );
+
+await new Promise<void>(resolve => httpServer.listen({ port: 4000 }, resolve));
+console.log(`🚀 Server ready at http://localhost:4000/`);
