@@ -115,7 +115,7 @@ async function startApolloServer() {
   await server.start();
 
   app.use('/',
-    cors<cors.CorsRequest>(),
+    cors<cors.CorsRequest>({origin: ["https://storied-klepon-f96294.netlify.app"]}),
     bodyParser.json(),
     // expressMiddleware accepts the same arguments:
     // an Apollo Server instance and optional configuration options
