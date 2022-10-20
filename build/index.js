@@ -1,13 +1,14 @@
 import { ApolloServer } from '@apollo/server';
 import { DateTypeDefinition } from 'graphql-scalars';
-import { MealsDatabase, PeopleDatabase } from './notion/backend';
+import { peopleDatabase, mealsDatabase } from './notion/backend';
 import { isFullPage } from '@notionhq/client';
 import express from 'express';
 import http from 'http';
 import { ApolloServerPluginDrainHttpServer } from '@apollo/server/plugin/drainHttpServer';
 import cors from 'cors';
-import bodyParser from 'body-parser';
+import pkg from 'body-parser';
 import { expressMiddleware } from '@apollo/server/express4';
+const { json } = pkg;
 // A schema is a collection of type definitions (hence "typeDefs")
 // that together define the "shape" of queries that are executed against
 // your data.
@@ -23,8 +24,8 @@ const customTypeDefs = `#graphql
   }
 
   enum Course {
-    ENTREE,
-    SIDE,
+    ENTREE
+    SIDE
     DESSERT
   }
 
@@ -47,6 +48,12 @@ const customTypeDefs = `#graphql
     people: [PeopleReference]
   }
 
+  input PersonInput {
+    name: String,
+    email: String,
+    phoneNumber: String,
+  }
+
   # The "Query" type is special: it lists all of the available queries that
   # clients can execute, along with the return type for each. In this
   # case, the "books" query returns an array of zero or more Books (defined above).
@@ -57,6 +64,7 @@ const customTypeDefs = `#graphql
 
   type Mutation {
     createMeal(meal: MealInput): Boolean
+    createPerson(person: PersonInput): Boolean
   }
 `;
 const typeDefs = [
@@ -66,7 +74,7 @@ const typeDefs = [
 const resolvers = {
     Query: {
         people: async () => {
-            const data = await PeopleDatabase.query();
+            const data = await peopleDatabase.query();
             return data.results.map(page => {
                 if (isFullPage(page)) {
                     return {
@@ -84,9 +92,12 @@ const resolvers = {
     },
     Mutation: {
         createMeal: async (_, { meal }) => {
-            console.log(meal);
-            const newMeal = await MealsDatabase.create(meal);
+            const newMeal = await mealsDatabase.create(meal);
             return isFullPage(newMeal);
+        },
+        createPerson: async (_, { person }) => {
+            const newPerson = await peopleDatabase.create(person);
+            return isFullPage(newPerson);
         }
     }
 };
@@ -101,12 +112,7 @@ async function startApolloServer() {
         plugins: [ApolloServerPluginDrainHttpServer({ httpServer })],
     });
     await server.start();
-    app.use('/', cors(), bodyParser.json(), 
-    // expressMiddleware accepts the same arguments:
-    // an Apollo Server instance and optional configuration options
-    expressMiddleware(server, {
-        context: async ({ req }) => ({ token: req.headers.token }),
-    }));
+    app.use('/graphql', cors({ origin: ["https://storied-klepon-f96294.netlify.app"] }), json(), expressMiddleware(server));
     await new Promise(resolve => httpServer.listen({ port: process.env.PORT || 4000 }, resolve));
     console.log(`🚀 Server ready at http://localhost:4000/`);
 }

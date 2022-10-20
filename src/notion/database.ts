@@ -1,58 +1,87 @@
-import { notion } from "./backend"
-import { CreatePageParameters } from "@notionhq/client/build/src/api-endpoints";
+import { MealInput, notion, PersonInput } from "./backend"
 
-export class Database<T, InputType> {
-    id: string;
-    notion = notion;
-    constructor(id: string) {
-        this.id = id;
-    }
+export class PeopleDatabase {
+    _id = "91d1c692f46c4cff96d1d43b460bccea";
+    _notion = notion;
 
     query(filter?: any) {
         const query = notion.databases.query({
-            database_id: this.id,
+            database_id: this._id,
             filter: filter
         });
         console.log(query)
         return query;
     }
 
-    create(page: InputType) {
+    create(page: PersonInput) {
         console.log(page)
         return notion.pages.create({
             parent: {
                 type: "database_id",
-                database_id: this.id
+                database_id: this._id
             },
             properties: {
-                "Meal Name": {
-                    // @ts-ignore
+                'Name': {
                     title: [
                         {
-                            "type": "text",
-                            "text": {
-                                // @ts-ignore
-                              "content": page.name
+                            text: {
+                                content: page.name
+                            }
+                        }
+                    ]
+                },
+                Email: {
+                    email: page.email
+                },
+                Phone: {
+                    phone_number: page.phoneNumber
+                }
+            }
+        })
+    }
+}
+
+export class MealDatabase {
+    _id = "84e2850b0f48437d945b4993cb824af4";
+    _notion = notion;
+
+    query(filter?: any) {
+        const query = notion.databases.query({
+            database_id: this._id,
+            filter: filter
+        });
+        console.log(query)
+        return query;
+    }
+
+    create(page: MealInput) {
+        console.log(page)
+        return notion.pages.create({
+            parent: {
+                type: "database_id",
+                database_id: this._id
+            },
+            properties: {
+                'Meal Name': {
+                    title: [
+                        {
+                            text: {
+                                content: page.name
                             }
                         }
                     ]
                 },
                 Date: {
-                    // @ts-ignore
                     date: {
-                        // @ts-ignore
-                        start: page.date
+                        start: page.date.toISOString()
                     }
                 },
                 Category: {
-                    // @ts-ignore
                     select: {
-                        // @ts-ignore
-                        name: page.category
+                        name: page.category.toString()
                     }
                 },
                 People: {
-                    // @ts-ignore
                     relation: page.people
                 }
             }

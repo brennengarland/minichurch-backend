@@ -1,13 +1,15 @@
 import { ApolloServer } from '@apollo/server';
 import { DateTypeDefinition } from 'graphql-scalars'
-import { MealsDatabase, PeopleDatabase, MealInput } from './notion/backend';
+import { MealInput, PersonInput, peopleDatabase, mealsDatabase } from './notion/backend';
 import { isFullPage } from '@notionhq/client';
 import express from 'express';
 import http from 'http';
 import { ApolloServerPluginDrainHttpServer } from '@apollo/server/plugin/drainHttpServer';
 import cors from 'cors';
-import bodyParser, { json } from 'body-parser';
+import pkg from 'body-parser';
 import { expressMiddleware } from '@apollo/server/express4';
+
+const {json} = pkg;
 
 
 // A schema is a collection of type definitions (hence "typeDefs")
@@ -25,8 +27,8 @@ const customTypeDefs = `#graphql
   }
 
   enum Course {
-    ENTREE,
-    SIDE,
+    ENTREE
+    SIDE
     DESSERT
   }
 
@@ -49,6 +51,12 @@ const customTypeDefs = `#graphql
     people: [PeopleReference]
   }
 
+  input PersonInput {
+    name: String,
+    email: String,
+    phoneNumber: String,
+  }
+
   # The "Query" type is special: it lists all of the available queries that
   # clients can execute, along with the return type for each. In this
   # case, the "books" query returns an array of zero or more Books (defined above).
@@ -59,6 +67,7 @@ const customTypeDefs = `#graphql
 
   type Mutation {
     createMeal(meal: MealInput): Boolean
+    createPerson(person: PersonInput): Boolean
   }
 `;
 
@@ -70,7 +79,7 @@ const typeDefs = [
 const resolvers = {
     Query: {
         people: async () => {
-          const data = await PeopleDatabase.query();
+          const data = await peopleDatabase.query();
           return data.results.map(page => {
             if(isFullPage(page)) {
               return {
@@ -88,9 +97,12 @@ const resolvers = {
       },
     Mutation: {
       createMeal: async (_: any,{ meal }: {meal: MealInput}) => {
-        console.log(meal)
-        const newMeal = await MealsDatabase.create(meal);
+        const newMeal = await mealsDatabase.create(meal);
         return isFullPage(newMeal)
+      },
+      createPerson: async (_: any, { person }: {person: PersonInput }) => {
+        const newPerson = await peopleDatabase.create(person);
+        return isFullPage(newPerson)
       }
     }
 }

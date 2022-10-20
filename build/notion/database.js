@@ -1,12 +1,12 @@
 import { notion } from "./backend";
-export class Database {
-    constructor(id) {
-        this.notion = notion;
-        this.id = id;
+export class PeopleDatabase {
+    constructor() {
+        this._id = "91d1c692f46c4cff96d1d43b460bccea";
+        this._notion = notion;
     }
     query(filter) {
         const query = notion.databases.query({
-            database_id: this.id,
+            database_id: this._id,
             filter: filter
         });
         console.log(query);
@@ -17,37 +17,69 @@ export class Database {
         return notion.pages.create({
             parent: {
                 type: "database_id",
-                database_id: this.id
+                database_id: this._id
             },
             properties: {
-                "Meal Name": {
-                    // @ts-ignore
+                'Name': {
                     title: [
                         {
-                            "type": "text",
-                            "text": {
-                                // @ts-ignore
-                                "content": page.name
+                            text: {
+                                content: page.name
+                            }
+                        }
+                    ]
+                },
+                Email: {
+                    email: page.email
+                },
+                Phone: {
+                    phone_number: page.phoneNumber
+                }
+            }
+        });
+    }
+}
+export class MealDatabase {
+    constructor() {
+        this._id = "84e2850b0f48437d945b4993cb824af4";
+        this._notion = notion;
+    }
+    query(filter) {
+        const query = notion.databases.query({
+            database_id: this._id,
+            filter: filter
+        });
+        console.log(query);
+        return query;
+    }
+    create(page) {
+        console.log(page);
+        return notion.pages.create({
+            parent: {
+                type: "database_id",
+                database_id: this._id
+            },
+            properties: {
+                'Meal Name': {
+                    title: [
+                        {
+                            text: {
+                                content: page.name
                             }
                         }
                     ]
                 },
                 Date: {
-                    // @ts-ignore
                     date: {
-                        // @ts-ignore
-                        start: page.date
+                        start: page.date.toISOString()
                     }
                 },
                 Category: {
-                    // @ts-ignore
                     select: {
-                        // @ts-ignore
-                        name: page.category
+                        name: page.category.toString()
                     }
                 },
                 People: {
-                    // @ts-ignore
                     relation: page.people
                 }
             }

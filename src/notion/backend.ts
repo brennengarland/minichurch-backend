@@ -1,6 +1,6 @@
 import { Client } from "@notionhq/client";
 import dotenv from "dotenv";
-import { Database } from "./database";
+import { MealDatabase, PeopleDatabase } from "./database";
 
 const MEALS_URL = "https://www.notion.so/mini-church/84e2850b0f48437d945b4993cb824af4?v=ef05198e89af4e949bccc722740d06b5";
 const MEALS_DATABASE_ID = "84e2850b0f48437d945b4993cb824af4";
@@ -40,7 +40,7 @@ export interface MealInput {
   name: string
   category: Course
   date: Date
-  people: string[]
+  people: {id: string}[]
 }
 
 
@@ -48,8 +48,8 @@ export const notion = new Client({
     auth: process.env.NOTION_TOKEN,
   });
 
-export const PeopleDatabase = new Database<Person, PersonInput>(PEOPLE_DATABASE_ID);
-export const MealsDatabase = new Database<Meal, MealInput>(MEALS_DATABASE_ID);
+export const peopleDatabase = new PeopleDatabase();
+export const mealsDatabase = new MealDatabase();
 
-export const people = () => PeopleDatabase.query()
+export const people = () => peopleDatabase.query()
 export const page = (id: string) => notion.pages.retrieve({ page_id: id });
