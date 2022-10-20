@@ -6,7 +6,7 @@ import express from 'express';
 import http from 'http';
 import { ApolloServerPluginDrainHttpServer } from '@apollo/server/plugin/drainHttpServer';
 import cors from 'cors';
-import bodyParser from 'body-parser';
+import bodyParser, { json } from 'body-parser';
 import { expressMiddleware } from '@apollo/server/express4';
 
 
@@ -114,14 +114,11 @@ async function startApolloServer() {
 
   await server.start();
 
-  app.use('/',
+  app.use(
+    '/graphql',
     cors<cors.CorsRequest>({origin: ["https://storied-klepon-f96294.netlify.app"]}),
-    bodyParser.json(),
-    // expressMiddleware accepts the same arguments:
-    // an Apollo Server instance and optional configuration options
-    expressMiddleware(server, {
-      context: async ({ req }) => ({ token: req.headers.token }),
-    }),
+    json(),
+    expressMiddleware(server),
     );
 
   await new Promise<void>(resolve => httpServer.listen({ port: process.env.PORT || 4000 }, resolve));
