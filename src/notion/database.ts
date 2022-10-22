@@ -45,10 +45,16 @@ export class MealDatabase {
     _id = "84e2850b0f48437d945b4993cb824af4";
     _notion = notion;
 
-    query(filter?: any) {
+    query() {
+        console.log(new Date().toISOString())
         const query = notion.databases.query({
             database_id: this._id,
-            filter: filter
+            filter: {
+                property: "Date",
+                date: {
+                    on_or_after: new Date().toISOString()
+                }
+            }
         });
         console.log(query)
         return query;
@@ -73,7 +79,7 @@ export class MealDatabase {
                 },
                 Date: {
                     date: {
-                        start: page.date.toISOString()
+                        start: page.date
                     }
                 },
                 Category: {

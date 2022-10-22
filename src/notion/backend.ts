@@ -39,7 +39,7 @@ export interface Meal {
 export interface MealInput {
   name: string
   category: Course
-  date: Date
+  date: string
   people: {id: string}[]
 }
 

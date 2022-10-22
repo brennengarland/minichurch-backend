@@ -32,9 +32,8 @@ const customTypeDefs = `#graphql
   type Meal {
     _id: String
     name: String
-    category: Course
+    course: Course
     date: Date
-    person: [Person]
   }
 
   input PeopleReference {
@@ -64,7 +63,7 @@ const customTypeDefs = `#graphql
 
   type Mutation {
     createMeal(meal: MealInput): Boolean
-    createPerson(person: PersonInput): Boolean
+    createPerson(person: PersonInput): Person
   }
 `;
 const typeDefs = [
@@ -89,6 +88,26 @@ const resolvers = {
                 }
             });
         },
+        meals: async () => {
+            console.log("Query called!");
+            const data = await mealsDatabase.query();
+            console.log(data);
+            return data.results.map(page => {
+                console.log(page);
+                if (isFullPage(page)) {
+                    console.log(page.properties);
+                    return {
+                        _id: page.id,
+                        // @ts-ignore
+                        name: page.properties['Meal Name'].title[0].plain_text,
+                        // @ts-ignore
+                        course: page.properties.Category.select.name,
+                        // @ts-ignore
+                        date: page.properties.Date.date.start
+                    };
+                }
+            });
+        }
     },
     Mutation: {
         createMeal: async (_, { meal }) => {
@@ -97,7 +116,17 @@ const resolvers = {
         },
         createPerson: async (_, { person }) => {
             const newPerson = await peopleDatabase.create(person);
-            return isFullPage(newPerson);
+            if (isFullPage(newPerson)) {
+                return {
+                    _id: newPerson.id,
+                    // @ts-ignore
+                    name: newPerson.properties.Name.title[0].plain_text,
+                    // @ts-ignore
+                    email: newPerson.properties.Email.email,
+                    // @ts-ignore
+                    phone: newPerson.properties.Phone.phone_number,
+                };
+            }
         }
     }
 };
