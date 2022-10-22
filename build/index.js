@@ -113,7 +113,9 @@ const resolvers = {
     },
     Mutation: {
         createMeal: async (_, { meal }) => {
-            const newMeal = await mealsDatabase.create(meal);
+            let { date, ...otherProps } = meal;
+            date = meal.date.split('T')[0];
+            const newMeal = await mealsDatabase.create({ date, ...otherProps });
             return isFullPage(newMeal);
         },
         createPerson: async (_, { person }) => {
@@ -143,7 +145,7 @@ async function startApolloServer() {
         plugins: [ApolloServerPluginDrainHttpServer({ httpServer })],
     });
     await server.start();
-    app.use('/graphql', cors({ origin: [process.env.FRONT_END_URL] }), json(), expressMiddleware(server));
+    app.use('/graphql', cors(), json(), expressMiddleware(server));
     await new Promise(resolve => httpServer.listen({ port: process.env.PORT || 4000 }, resolve));
     console.log(`🚀 Server ready at http://localhost:4000/`);
 }

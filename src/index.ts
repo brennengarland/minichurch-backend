@@ -119,7 +119,9 @@ const resolvers = {
       },
     Mutation: {
       createMeal: async (_: any,{ meal }: {meal: MealInput}) => {
-        const newMeal = await mealsDatabase.create(meal);
+        let { date, ...otherProps } = meal;
+        date = meal.date.split('T')[0]
+        const newMeal = await mealsDatabase.create({date, ...otherProps});
         return isFullPage(newMeal)
       },
       createPerson: async (_: any, { person }: {person: PersonInput }) => {
