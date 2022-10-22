@@ -161,7 +161,7 @@ async function startApolloServer() {
 
   app.use(
     '/graphql',
-    cors<cors.CorsRequest>({origin: ['https://minichurch126.netlify.app']}),
+    cors<cors.CorsRequest>({origin: ['https://minichurch126.netlify.app/']}),
     json(),
     expressMiddleware(server),
     );
