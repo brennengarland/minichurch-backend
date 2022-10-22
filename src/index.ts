@@ -8,6 +8,9 @@ import { ApolloServerPluginDrainHttpServer } from '@apollo/server/plugin/drainHt
 import cors from 'cors';
 import pkg from 'body-parser';
 import { expressMiddleware } from '@apollo/server/express4';
+import dotenv from "dotenv";
+dotenv.config()
+
 
 const {json} = pkg;
 
@@ -158,7 +161,7 @@ async function startApolloServer() {
 
   app.use(
     '/graphql',
-    cors<cors.CorsRequest>({origin: ["https://minichurch126.netlify.app/"]}),
+    cors<cors.CorsRequest>({origin: [process.env.FRONT_END_URL as string]}),
     json(),
     expressMiddleware(server),
     );

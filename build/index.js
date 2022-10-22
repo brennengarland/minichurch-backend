@@ -8,6 +8,8 @@ import { ApolloServerPluginDrainHttpServer } from '@apollo/server/plugin/drainHt
 import cors from 'cors';
 import pkg from 'body-parser';
 import { expressMiddleware } from '@apollo/server/express4';
+import dotenv from "dotenv";
+dotenv.config();
 const { json } = pkg;
 // A schema is a collection of type definitions (hence "typeDefs")
 // that together define the "shape" of queries that are executed against
@@ -141,7 +143,7 @@ async function startApolloServer() {
         plugins: [ApolloServerPluginDrainHttpServer({ httpServer })],
     });
     await server.start();
-    app.use('/graphql', cors({ origin: ["https://storied-klepon-f96294.netlify.app"] }), json(), expressMiddleware(server));
+    app.use('/graphql', cors({ origin: [process.env.FRONT_END_URL] }), json(), expressMiddleware(server));
     await new Promise(resolve => httpServer.listen({ port: process.env.PORT || 4000 }, resolve));
     console.log(`🚀 Server ready at http://localhost:4000/`);
 }
